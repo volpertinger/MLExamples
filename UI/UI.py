@@ -15,40 +15,6 @@ def init_demo():
     dpg.destroy_context()
 
 
-def init_basic():
-    dpg.create_context()
-    dpg.create_viewport(title='Machine learning examples', width=600, height=200)
-    dpg.setup_dearpygui()
-
-    with dpg.window(label="Example Window"):
-        dpg.add_text("Hello, world")
-
-    dpg.show_viewport()
-
-    # below replaces, start_dearpygui()
-    while dpg.is_dearpygui_running():
-        # insert here any code you would like to run in the render loop
-        # you can manually stop by using stop_dearpygui()
-        print("this will run every frame")
-        dpg.render_dearpygui_frame()
-
-    dpg.destroy_context()
-
-
-def init_prime():
-    dpg.create_context()
-
-    with dpg.window(tag="Primary Window"):
-        dpg.add_text("Hello, world")
-
-    dpg.create_viewport(title='Custom Title', width=600, height=200)
-    dpg.setup_dearpygui()
-    dpg.show_viewport()
-    dpg.set_primary_window("Primary Window", True)
-    dpg.start_dearpygui()
-    dpg.destroy_context()
-
-
 def init_handlers():
     dpg.create_context()
 
@@ -129,11 +95,22 @@ class UI:
         dpg.create_viewport(title=label, width=width, height=height)
         dpg.setup_dearpygui()
         dpg.show_viewport()
+        dpg.set_viewport_vsync(True)
 
     @staticmethod
     def __init_prime_window(tag):
         with dpg.window(tag=tag):
-            dpg.add_text("Hello, world")
+            # Select methods block
+            dpg.add_text(Settings.SELECT_ML_METHOD)
+            dpg.add_radio_button(Settings.ML_METHODS)
+            # Learn block
+            with dpg.group(horizontal=True):
+                dpg.add_button(label=Settings.LEARN)
+                dpg.add_text("Some learn result")
+            # Test block
+            with dpg.group(horizontal=True):
+                dpg.add_input_text(label=Settings.INPUT_VALUE_FOR_TEST)
+            dpg.add_text("Some test result")
         dpg.set_primary_window(tag, True)
 
     @staticmethod
@@ -170,6 +147,10 @@ class UI:
         dpg.destroy_context()
 
     def init_gui(self):
-        self.__init_viewport(self.__viewport_label, self.viewport_width, self.__viewport_height)
         self.__init_prime_window(self.__prime_window_label)
+        self.__init_viewport(self.__viewport_label, self.viewport_width, self.__viewport_height)
         self.__init_frame_updater(self.__main_updater)
+
+    @staticmethod
+    def init_demo():
+        init_demo()
