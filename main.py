@@ -1,4 +1,5 @@
-from UI import init_gui
+from UI.UI import UI
 
 if __name__ == '__main__':
-    init_gui()
+    ui = UI()
+    ui.init_gui()
