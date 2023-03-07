@@ -97,8 +97,7 @@ class UI:
         dpg.show_viewport()
         dpg.set_viewport_vsync(True)
 
-    @staticmethod
-    def __init_prime_window(tag):
+    def __init_prime_window(self, tag):
         with dpg.window(tag=tag):
             # Select methods block
             dpg.add_text(Settings.SELECT_ML_METHOD)
@@ -106,11 +105,12 @@ class UI:
             # Learn block
             with dpg.group(horizontal=True):
                 dpg.add_button(label=Settings.LEARN)
-                dpg.add_text("Some learn result")
+                dpg.add_text("Some learn result", tag=self.__teach_result)
             # Test block
             with dpg.group(horizontal=True):
+                dpg.add_button(label=Settings.TEST)
                 dpg.add_input_text(label=Settings.INPUT_VALUE_FOR_TEST)
-            dpg.add_text("Some test result")
+            dpg.add_text("Some test result", tag=self.__test_result)
         dpg.set_primary_window(tag, True)
 
     @staticmethod
@@ -122,9 +122,11 @@ class UI:
             updater()
             dpg.render_dearpygui_frame()
 
-    @staticmethod
-    def __main_updater():
-        print("UI is running")
+    def __main_updater(self):
+        self.__counter += 1
+        print(self.__counter)
+        dpg.set_value(self.__test_result, f"Mouse Button: {self.__counter}")
+        return
 
     # ------------------------------------------------------------------------------------------------------------------
     # public
@@ -139,7 +141,10 @@ class UI:
         self.__prime_window_label = label_viewport
         self.__viewport_label = label_prime_window
         self.__viewport_height = height
-        self.viewport_width = width
+        self.__viewport_width = width
+        self.__teach_result = Settings.TAG_LEARN_RESULT
+        self.__test_result = Settings.TAG_TEST_RESULT
+        self.__counter = 1
         dpg.create_context()
 
     @staticmethod
@@ -148,7 +153,7 @@ class UI:
 
     def init_gui(self):
         self.__init_prime_window(self.__prime_window_label)
-        self.__init_viewport(self.__viewport_label, self.viewport_width, self.__viewport_height)
+        self.__init_viewport(self.__viewport_label, self.__viewport_width, self.__viewport_height)
         self.__init_frame_updater(self.__main_updater)
 
     @staticmethod
