@@ -55,6 +55,7 @@ TAG_SELECTED_FILENAME = "SelectedFile"
 TAG_LEARN_BUTTON = "LearnButton"
 TAG_TEST_BUTTON = "TestButton"
 TAG_ERRORS = "Errors"
+TAG_LOADING = "Loading"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Datasets

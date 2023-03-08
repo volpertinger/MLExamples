@@ -4,9 +4,6 @@ import Settings as Settings
 import ML as ML
 
 
-# TODO: вывод данных датафрейма - возможные индексы для теста
-# TODO: вывод ошибок
-
 def init_demo():
     dpg.create_context()
     dpg.create_viewport(title='Custom Title', width=600, height=600)
@@ -76,6 +73,8 @@ class UI:
                 dpg.add_input_text(tag=Settings.TAG_INPUT_TEST_VALUE, width=Settings.INPUT_WIDTH,
                                    hint=Settings.INPUT_TEST_HINT, enabled=False)
             dpg.add_text("", tag=Settings.TAG_TEST_RESULT)
+            # Loading
+            dpg.add_loading_indicator(circle_count=8, show=False, tag=Settings.TAG_LOADING)
         self.__change_learn_status(self.__current_method.label())
         dpg.set_primary_window(tag, True)
 
@@ -130,27 +129,41 @@ class UI:
         dpg.disable_item(Settings.TAG_INPUT_TEST_VALUE)
         dpg.set_value(Settings.TAG_INPUT_TEST_VALUE, "")
 
+    @staticmethod
+    def __disable_load():
+        dpg.hide_item(Settings.TAG_LOADING)
+
+    @staticmethod
+    def __enable_load():
+        dpg.show_item(Settings.TAG_LOADING)
+
     # ------------------------------------------------------------------------------------------------------------------
     # private callbacks
     # ------------------------------------------------------------------------------------------------------------------
 
     def __callback_change_learn_status(self, sender, app_data, user_data):
+        self.__enable_load()
         self.__log("__callback_change_learn_status", sender, app_data, user_data)
         self.__clear_test_result()
         self.__current_method.load()
         self.__change_learn_status(app_data)
+        self.__disable_load()
 
     def __callback_learn(self, sender, app_data, user_data):
+        self.__enable_load()
         self.__log("__callback_learn", sender, app_data, user_data)
         self.__current_method = self.__get_save_by_label(app_data)
         self.__current_method.teach()
         self.__change_learn_status(app_data)
+        self.__disable_load()
 
     def __callback_test(self, sender, app_data, user_data):
+        self.__enable_load()
         self.__current_method.load()
         self.__log("__callback_test", sender, app_data, user_data)
         dpg.set_value(Settings.TAG_TEST_RESULT,
                       self.__current_method.test(dpg.get_value(Settings.TAG_INPUT_TEST_VALUE)))
+        self.__disable_load()
 
     def __callback_select_file(self, sender, app_data, user_data):
         self.__log("__callback_select_file", sender, app_data, user_data)

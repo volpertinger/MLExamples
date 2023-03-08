@@ -1,6 +1,7 @@
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import LinearSVC
@@ -9,8 +10,6 @@ import pickle
 
 import Settings
 
-
-# TODO: обучение ансамблем
 
 class DataSet:
     def __init__(self, path: str = ""):
@@ -71,7 +70,7 @@ class MLModel:
         self.__log("__save_model", f"saving to path {save_path}")
         pickle.dump(model, open(save_path, "wb"))
 
-    def __teach(self, method):
+    def __teach(self, method, is_stacking=False):
         train_data, train_result = self.__get_separated_data(self.__train_df)
         test_data, test_result = self.__get_separated_data(self.__test_df)
         self.__test_data = test_data
@@ -80,7 +79,12 @@ class MLModel:
         if self.__is_save_exists():
             model = self.__load_model()
         else:
-            model = method()
+            if is_stacking:
+                estimators = [
+                    ('rf', RandomForestClassifier())]
+                model = method(estimators=estimators, final_estimator=LogisticRegression())
+            else:
+                model = method()
             model.fit(train_data, train_result)
             self.__save_model(model)
 
@@ -103,7 +107,7 @@ class MLModel:
         return self.__teach(GradientBoostingClassifier)
 
     def __stacking_learn(self):
-        pass
+        return self.__teach(StackingClassifier, True)
 
     def __after_teach_processing(self):
         self.__is_learned = True
