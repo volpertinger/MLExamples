@@ -3,11 +3,9 @@ import dearpygui.demo as demo
 import Settings as Settings
 import ML as ML
 
-
-# TODO: при очистке очищать путь к директории
-# TODO: начальная проверка всех методов на обученность
 # TODO: сделать кнопки неактивными при отсутствии выбранной директории
-# TODO: более корректный вывод результата обучения
+# TODO: вывод данных датафрейма - возможные индексы для теста
+# TODO: вывод ошибок
 
 def init_demo():
     dpg.create_context()
@@ -113,6 +111,14 @@ class UI:
         self.__log_base("__clear_test_result", "clearing test result")
         dpg.set_value(Settings.TAG_TEST_RESULT, "")
 
+    def __dataset_change_processing(self):
+        self.__rf.set_dataset(self.__dataset)
+        self.__svm.set_dataset(self.__dataset)
+        self.__knn.set_dataset(self.__dataset)
+        self.__gbm.set_dataset(self.__dataset)
+        self.__stacking.set_dataset(self.__dataset)
+        pass
+
     # ------------------------------------------------------------------------------------------------------------------
     # private callbacks
     # ------------------------------------------------------------------------------------------------------------------
@@ -125,7 +131,7 @@ class UI:
     def __callback_learn(self, sender, app_data, user_data):
         self.__log("__callback_learn", sender, app_data, user_data)
         self.__current_method = self.__get_save_by_label(app_data)
-        self.__current_method.teach(self.__dataset)
+        self.__current_method.teach()
         self.__change_learn_status(app_data)
 
     def __callback_test(self, sender, app_data, user_data):
@@ -136,12 +142,15 @@ class UI:
     def __callback_select_file(self, sender, app_data, user_data):
         self.__log("__callback_select_file", sender, app_data, user_data)
         self.__dataset = ML.DataSet(app_data["file_path_name"])
+        self.__dataset_change_processing()
+        self.__callback_change_learn_status(sender, app_data, user_data)
         dpg.set_value(Settings.TAG_SELECTED_FILENAME, self.__dataset.name())
         self.__log_base("__callback_select_file", str(self.__dataset))
 
     def __callback_clear(self, sender, app_data, user_data):
         self.__log("__callback_clear", sender, app_data, user_data)
         self.__clear_test_result()
+        self.__dataset = None
         dpg.set_value(Settings.TAG_SELECTED_FILENAME, "")
 
     # ------------------------------------------------------------------------------------------------------------------

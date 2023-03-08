@@ -43,6 +43,7 @@ class MLModel:
         self.__label = label  # название метода обучения
         self.__model = None  # модель машинного обучения
         self.__data_set = DataSet()
+        self.check_learn()
 
     @staticmethod
     def __log(prefix, data):
@@ -56,6 +57,7 @@ class MLModel:
 
     def __is_save_exists(self):
         save_path = self.__get_save_path(self.__label)
+        self.__log("__is_save_exists", f"checking path: {save_path}")
         return exists(save_path)
 
     def __load_model(self):
@@ -136,11 +138,13 @@ class MLModel:
     # ------------------------------------------------------------------------------------------------------------------
     # public
     # ------------------------------------------------------------------------------------------------------------------
+    def set_dataset(self, dataset: DataSet):
+        self.__data_set = dataset
 
-    def teach(self, dataset):
+    def teach(self):
         result = ""
-        self.__log("teach", f"teaching dataset {dataset.path()} with method {self.__label}")
-        self.__before_teach_processing(dataset)
+        self.__log("teach", f"teaching dataset {self.__data_set.path()} with method {self.__label}")
+        self.__before_teach_processing(self.__data_set)
         if self.__label == Settings.RF:
             result = self.__rf_learn()
         elif self.__label == Settings.SVM:
@@ -156,7 +160,10 @@ class MLModel:
         return
 
     def check_learn(self):
-        self.__is_learned = self.__is_save_exists()
+        self.__log("check_learn", f"{self.__label} started")
+        result = self.__is_save_exists()
+        self.__is_learned = result
+        self.__log("check_learn", f"{self.__label} ended, result: {result}")
 
     def is_learned(self):
         self.check_learn()

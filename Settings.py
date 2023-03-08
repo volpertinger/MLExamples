@@ -52,6 +52,7 @@ TAG_LEARN_RESULT = "LearnResultLabel"
 TAG_TEST_RESULT = "TestResultLabel"
 TAG_INPUT_TEST_VALUE = "InputTest"
 TAG_SELECTED_FILENAME = "SelectedFile"
+TAG_ERRORS = "Errors"
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Datasets
