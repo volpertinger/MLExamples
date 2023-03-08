@@ -52,7 +52,7 @@ class UI:
             dpg.add_text(Settings.SELECT_DATASET)
             with dpg.group(horizontal=True):
                 with dpg.file_dialog(label=Settings.SELECT_DATASET, width=Settings.FILE_DIALOG_WIDTH,
-                                     height=Settings.FILE_DIALOG_HEIGHT, show=False,
+                                     height=Settings.FILE_DIALOG_HEIGHT, show=False, directory_selector=True,
                                      callback=self.__callback_select_file):
                     dpg.add_file_extension(".csv", color=(255, 255, 255, 255))
                     dpg.add_file_extension(".*", color=(0, 0, 0, 0))
@@ -128,8 +128,8 @@ class UI:
 
     def __callback_select_file(self, sender, app_data, user_data):
         self.__log("__callback_select_file", sender, app_data, user_data)
-        self.__dataset = Saves.DataSet(app_data["file_path_name"], app_data["file_name"])
-        dpg.set_value(Settings.TAG_SELECTED_FILENAME, app_data["file_name"])
+        self.__dataset = Saves.DataSet(app_data["file_path_name"])
+        dpg.set_value(Settings.TAG_SELECTED_FILENAME, self.__dataset.name())
         self.__log_base("__callback_select_file", str(self.__dataset))
 
     def __callback_clear(self, sender, app_data, user_data):
@@ -167,7 +167,7 @@ class UI:
         self.__knn = Saves.MLModel(Settings.KNN)
         self.__gbm = Saves.MLModel(Settings.GBM)
         self.__stacking = Saves.MLModel(Settings.STACKING)
-        self.__dataset = Saves.DataSet.empty()
+        self.__dataset = Saves.DataSet()
         self.__current_method = self.__rf
         self.__counter = 1
         dpg.create_context()

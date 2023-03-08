@@ -1,21 +1,19 @@
 import pandas as pd
-import numpy as np
 from pandas.core.dtypes.common import is_numeric_dtype
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.svm import LinearSVC
+from os.path import exists
+import pickle
 
 import Settings
 
 
 class DataSet:
-    def __init__(self, path, name):
+    def __init__(self, path: str = ""):
         self.__path = path
-        self.__name = name
-
-    @staticmethod
-    def empty():
-        return DataSet(None, None)
+        self.__name = path.split("\\")[-1]
 
     def __str__(self):
         return f"path: {self.__path} filename: {self.__name}"
@@ -37,22 +35,59 @@ class MLModel:
         self.__save_file_path = None
         self.__train_df = None
         self.__label = label
-        self.__data_set = DataSet.empty()
+        self.__data_set = DataSet()
+
+    @staticmethod
+    def __log(prefix, data):
+        print(f"[{prefix}]: {data}")
 
     def __check_learn(self):
         return
 
+    def __get_train_data(self):
+        train_data = self.__train_df.drop(Settings.DATASET_RESULT_COLUMN, axis=1)
+        train_result = self.__train_df[Settings.DATASET_RESULT_COLUMN]
+        return train_data, train_result
+
+    def __is_save_exists(self, label):
+        save_path = self.__get_save_path(label)
+        return exists(save_path)
+
+    def __load_model(self, label):
+        save_path = self.__get_save_path(label)
+        self.__log("__load_model", f"loading from path {save_path}")
+        return pickle.load(open(save_path, "rb"))
+
+    def __save_model(self, model, label):
+        save_path = self.__get_save_path(label)
+        self.__log("__save_model", f"saving to path {save_path}")
+        pickle.dump(model, open(save_path, "wb"))
+
+    def __teach(self, method, label=""):
+        train_data, train_result = self.__get_train_data()
+
+        if self.__is_save_exists(label):
+            model = self.__load_model(label)
+        else:
+            model = method()
+            model.fit(train_data, train_result)
+            self.__save_model(model, label)
+
+        acc_log = round(model.score(train_data, train_result) * 100, 2)
+        self.__log("__teach", f"acc_log = {acc_log}")
+        return acc_log
+
     def __rf_learn(self):
-        pass
+        return self.__teach(RandomForestClassifier)
 
     def __svm_learn(self):
-        pass
+        return self.__teach(LinearSVC)
 
     def __knn_learn(self):
-        pass
+        return self.__teach(KNeighborsClassifier)
 
     def __gbm_learn(self):
-        pass
+        return self.__teach(GradientBoostingClassifier)
 
     def __stacking_learn(self):
         pass
@@ -61,13 +96,15 @@ class MLModel:
         self.__is_learned = True
         return
 
-    # TODO: убрать хардкод колонки
+    def __get_train_path(self):
+        return self.__data_set.path() + "\\" + Settings.DATASET_TRAIN
+
+    def __get_save_path(self, method):
+        return self.__data_set.path() + "\\" + method + "_" + Settings.DATASET_SAVE
+
     def __before_teach_processing(self, dataset: DataSet):
         self.__data_set = dataset
-        self.__train_df = pd.read_csv(self.__data_set.path())
-        print("train data info: ")
-        self.__train_df.info()
-        print(f"data description:\n{self.__train_df.describe()}")
+        self.__train_df = pd.read_csv(self.__get_train_path())
 
         for column in self.__train_df.columns:
             if is_numeric_dtype(self.__train_df[column]):
@@ -76,14 +113,6 @@ class MLModel:
             self.__train_df[column] = LabelEncoder().fit_transform(self.__train_df[column])
 
         self.__train_df = self.__train_df.dropna()
-        self.__train_df.info()
-        X_train = self.__train_df.drop("satisfaction", axis=1)
-        Y_train = self.__train_df["satisfaction"]
-
-        logreg = LogisticRegression()
-        logreg.fit(X_train, Y_train)
-        acc_log = round(logreg.score(X_train, Y_train) * 100, 2)
-        print(acc_log)
         return
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -91,17 +120,20 @@ class MLModel:
     # ------------------------------------------------------------------------------------------------------------------
 
     def teach(self, dataset):
+        result = ""
+        self.__log("teach", f"teaching dataset {dataset.path()} with method {self.__label}")
         self.__before_teach_processing(dataset)
         if self.__label == Settings.RF:
-            self.__rf_learn()
+            result = self.__rf_learn()
         elif self.__label == Settings.SVM:
-            self.__svm_learn()
+            result = self.__svm_learn()
         elif self.__label == Settings.KNN:
-            self.__knn_learn()
+            result = self.__knn_learn()
         elif self.__label == Settings.GBM:
-            self.__gbm_learn()
+            result = self.__gbm_learn()
         elif self.__label == Settings.STACKING:
-            self.__stacking_learn()
+            result = self.__stacking_learn()
+        print(result)
         self.__after_teach_processing()
         return
 
