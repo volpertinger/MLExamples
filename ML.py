@@ -1,12 +1,11 @@
+import pickle
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import LinearSVC
 from os.path import exists
-import pickle
 
 import Settings
 
@@ -71,6 +70,7 @@ class MLModel:
         pickle.dump(model, open(save_path, "wb"))
 
     def __teach(self, method, is_stacking=False):
+        self.__log("__teach", "start")
         train_data, train_result = self.__get_separated_data(self.__train_df)
         test_data, test_result = self.__get_separated_data(self.__test_df)
         self.__test_data = test_data
@@ -80,9 +80,12 @@ class MLModel:
             model = self.__load_model()
         else:
             if is_stacking:
+                self.__log("__teach", "stacking")
                 estimators = [
-                    ('rf', RandomForestClassifier())]
-                model = method(estimators=estimators, final_estimator=LogisticRegression())
+                    ('rf', RandomForestClassifier()),
+                    ('knn', KNeighborsClassifier()),
+                    ('gbm', GradientBoostingClassifier())]
+                model = method(estimators=estimators)
             else:
                 model = method()
             model.fit(train_data, train_result)
@@ -185,7 +188,16 @@ class MLModel:
         return self.__label
 
     def test(self, test_index):
+        try:
+            index = int(test_index)
+        except ValueError:
+            return f"invalid index! Can`t convert to integer"
         if self.__predict is None:
             self.teach()
-        return f"Predicted data: {self.__predict[int(test_index)]}\n" \
-               f"Test data: {self.__test_result[int(test_index)]}"
+        max_len = len(self.__predict)
+        if max_len <= index:
+            return f"invalid index! {index} > {max_len}!"
+        if index < 0:
+            return f"invalid index! {index} < 0!"
+        return f"Predicted data: {self.__predict[index]}\n" \
+               f"Test data: {self.__test_result[index]}"
