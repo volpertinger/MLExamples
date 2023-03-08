@@ -41,37 +41,34 @@ class MLModel:
     def __log(prefix, data):
         print(f"[{prefix}]: {data}")
 
-    def __check_learn(self):
-        return
-
     def __get_train_data(self):
         train_data = self.__train_df.drop(Settings.DATASET_RESULT_COLUMN, axis=1)
         train_result = self.__train_df[Settings.DATASET_RESULT_COLUMN]
         return train_data, train_result
 
-    def __is_save_exists(self, label):
-        save_path = self.__get_save_path(label)
+    def __is_save_exists(self):
+        save_path = self.__get_save_path(self.__label)
         return exists(save_path)
 
-    def __load_model(self, label):
-        save_path = self.__get_save_path(label)
+    def __load_model(self):
+        save_path = self.__get_save_path(self.__label)
         self.__log("__load_model", f"loading from path {save_path}")
         return pickle.load(open(save_path, "rb"))
 
-    def __save_model(self, model, label):
-        save_path = self.__get_save_path(label)
+    def __save_model(self, model):
+        save_path = self.__get_save_path(self.__label)
         self.__log("__save_model", f"saving to path {save_path}")
         pickle.dump(model, open(save_path, "wb"))
 
-    def __teach(self, method, label=""):
+    def __teach(self, method):
         train_data, train_result = self.__get_train_data()
 
-        if self.__is_save_exists(label):
-            model = self.__load_model(label)
+        if self.__is_save_exists():
+            model = self.__load_model()
         else:
             model = method()
             model.fit(train_data, train_result)
-            self.__save_model(model, label)
+            self.__save_model(model)
 
         acc_log = round(model.score(train_data, train_result) * 100, 2)
         self.__log("__teach", f"acc_log = {acc_log}")
@@ -137,8 +134,11 @@ class MLModel:
         self.__after_teach_processing()
         return
 
+    def check_learn(self):
+        self.__is_learned = self.__is_save_exists()
+
     def is_learned(self):
-        self.__check_learn()
+        self.check_learn()
         return self.__is_learned
 
     def label(self):
