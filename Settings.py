@@ -52,6 +52,8 @@ TAG_LEARN_RESULT = "LearnResultLabel"
 TAG_TEST_RESULT = "TestResultLabel"
 TAG_INPUT_TEST_VALUE = "InputTest"
 TAG_SELECTED_FILENAME = "SelectedFile"
+TAG_LEARN_BUTTON = "LearnButton"
+TAG_TEST_BUTTON = "TestButton"
 TAG_ERRORS = "Errors"
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -63,7 +63,8 @@ class MLModel:
     def __load_model(self):
         save_path = self.__get_save_path(self.__label)
         self.__log("__load_model", f"loading from path {save_path}")
-        return pickle.load(open(save_path, "rb"))
+        self.__model = pickle.load(open(save_path, "rb"))
+        return self.__model
 
     def __save_model(self, model):
         save_path = self.__get_save_path(self.__label)
@@ -141,6 +142,12 @@ class MLModel:
     def set_dataset(self, dataset: DataSet):
         self.__data_set = dataset
 
+    def load(self):
+        if self.__is_save_exists():
+            self.__load_model()
+        else:
+            return
+
     def teach(self):
         result = ""
         self.__log("teach", f"teaching dataset {self.__data_set.path()} with method {self.__label}")
@@ -163,6 +170,7 @@ class MLModel:
         self.__log("check_learn", f"{self.__label} started")
         result = self.__is_save_exists()
         self.__is_learned = result
+        self.load()
         self.__log("check_learn", f"{self.__label} ended, result: {result}")
 
     def is_learned(self):
@@ -173,5 +181,7 @@ class MLModel:
         return self.__label
 
     def test(self, test_index):
+        if self.__predict is None:
+            self.teach()
         return f"Predicted data: {self.__predict[int(test_index)]}\n" \
                f"Test data: {self.__test_result[int(test_index)]}"

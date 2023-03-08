@@ -4,23 +4,18 @@ import Settings as Settings
 import ML as ML
 
 
-# TODO: сделать кнопки неактивными при отсутствии выбранной директории
 # TODO: вывод данных датафрейма - возможные индексы для теста
 # TODO: вывод ошибок
 
 def init_demo():
     dpg.create_context()
     dpg.create_viewport(title='Custom Title', width=600, height=600)
-
     demo.show_demo()
-
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.start_dearpygui()
     dpg.destroy_context()
 
-
-# TODO: отдельная загрузка тестового и учебного дф + имя колонки для тестов
 
 class UI:
 
@@ -71,13 +66,15 @@ class UI:
             dpg.add_radio_button(Settings.ML_METHODS, callback=self.__callback_change_learn_status)
             # Learn block
             with dpg.group(horizontal=True):
-                dpg.add_button(label=Settings.LEARN, callback=self.__callback_learn, width=Settings.BUTTON_WIDTH)
+                dpg.add_button(label=Settings.LEARN, callback=self.__callback_learn, width=Settings.BUTTON_WIDTH,
+                               enabled=False, tag=Settings.TAG_LEARN_BUTTON)
                 dpg.add_text("Some test result", tag=Settings.TAG_LEARN_RESULT)
             # Test block
             with dpg.group(horizontal=True):
-                dpg.add_button(label=Settings.TEST, width=Settings.BUTTON_WIDTH, callback=self.__callback_test)
+                dpg.add_button(label=Settings.TEST, width=Settings.BUTTON_WIDTH, callback=self.__callback_test,
+                               enabled=False, tag=Settings.TAG_TEST_BUTTON)
                 dpg.add_input_text(tag=Settings.TAG_INPUT_TEST_VALUE, width=Settings.INPUT_WIDTH,
-                                   hint=Settings.INPUT_TEST_HINT)
+                                   hint=Settings.INPUT_TEST_HINT, enabled=False)
             dpg.add_text("", tag=Settings.TAG_TEST_RESULT)
         self.__change_learn_status(self.__current_method.label())
         dpg.set_primary_window(tag, True)
@@ -120,6 +117,19 @@ class UI:
         self.__stacking.set_dataset(self.__dataset)
         pass
 
+    @staticmethod
+    def __enable_ml():
+        dpg.enable_item(Settings.TAG_LEARN_BUTTON)
+        dpg.enable_item(Settings.TAG_TEST_BUTTON)
+        dpg.enable_item(Settings.TAG_INPUT_TEST_VALUE)
+
+    @staticmethod
+    def __disable_ml():
+        dpg.disable_item(Settings.TAG_LEARN_BUTTON)
+        dpg.disable_item(Settings.TAG_TEST_BUTTON)
+        dpg.disable_item(Settings.TAG_INPUT_TEST_VALUE)
+        dpg.set_value(Settings.TAG_INPUT_TEST_VALUE, "")
+
     # ------------------------------------------------------------------------------------------------------------------
     # private callbacks
     # ------------------------------------------------------------------------------------------------------------------
@@ -127,6 +137,7 @@ class UI:
     def __callback_change_learn_status(self, sender, app_data, user_data):
         self.__log("__callback_change_learn_status", sender, app_data, user_data)
         self.__clear_test_result()
+        self.__current_method.load()
         self.__change_learn_status(app_data)
 
     def __callback_learn(self, sender, app_data, user_data):
@@ -136,6 +147,7 @@ class UI:
         self.__change_learn_status(app_data)
 
     def __callback_test(self, sender, app_data, user_data):
+        self.__current_method.load()
         self.__log("__callback_test", sender, app_data, user_data)
         dpg.set_value(Settings.TAG_TEST_RESULT,
                       self.__current_method.test(dpg.get_value(Settings.TAG_INPUT_TEST_VALUE)))
@@ -145,6 +157,7 @@ class UI:
         self.__dataset = ML.DataSet(app_data["file_path_name"])
         self.__dataset_change_processing()
         self.__callback_change_learn_status(sender, app_data, user_data)
+        self.__enable_ml()
         dpg.set_value(Settings.TAG_SELECTED_FILENAME, self.__dataset.name())
         self.__log_base("__callback_select_file", str(self.__dataset))
 
@@ -152,6 +165,7 @@ class UI:
         self.__log("__callback_clear", sender, app_data, user_data)
         self.__clear_test_result()
         self.__dataset = None
+        self.__disable_ml()
         dpg.set_value(Settings.TAG_SELECTED_FILENAME, "")
 
     # ------------------------------------------------------------------------------------------------------------------
