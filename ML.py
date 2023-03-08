@@ -35,13 +35,13 @@ class MLModel:
     def __init__(self, label):
         self.__is_learned = False
         self.__save_file_path = None
-        self.__train_df = None
-        self.__test_df = None
-        self.__predict = None
-        self.__test_data = None
-        self.__test_result = None
-        self.__label = label
-        self.__model = None
+        self.__train_df = None  # полный датафрейм для тренировки
+        self.__test_df = None  # полный датафрейм для обучения
+        self.__predict = None  # вектор предсказанных значений
+        self.__test_data = None  # тестовые данные без результата тестирования
+        self.__test_result = None  # тестовые данные только с результатом тестирования
+        self.__label = label  # название метода обучения
+        self.__model = None  # модель машинного обучения
         self.__data_set = DataSet()
 
     @staticmethod
@@ -166,4 +166,5 @@ class MLModel:
         return self.__label
 
     def test(self, test_index):
-        return self.__predict[int(test_index)]
+        return f"Predicted data: {self.__predict[int(test_index)]}\n" \
+               f"Test data: {self.__test_result[int(test_index)]}"
