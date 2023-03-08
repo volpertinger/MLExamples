@@ -1,8 +1,12 @@
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
 import Settings as Settings
-import ML as Saves
+import ML as ML
 
+
+# TODO: при очистке очищать путь к директории
+# TODO: начальная проверка всех методов на обученность
+# TODO: сделать кнопки неактивными при отсутствии выбранной директории
 
 def init_demo():
     dpg.create_context()
@@ -14,6 +18,7 @@ def init_demo():
     dpg.show_viewport()
     dpg.start_dearpygui()
     dpg.destroy_context()
+
 
 # TODO: отдельная загрузка тестового и учебного дф + имя колонки для тестов
 
@@ -124,11 +129,12 @@ class UI:
 
     def __callback_test(self, sender, app_data, user_data):
         self.__log("__callback_test", sender, app_data, user_data)
-        dpg.set_value(Settings.TAG_TEST_RESULT, dpg.get_value(Settings.TAG_INPUT_TEST_VALUE))
+        dpg.set_value(Settings.TAG_TEST_RESULT,
+                      self.__current_method.test(dpg.get_value(Settings.TAG_INPUT_TEST_VALUE)))
 
     def __callback_select_file(self, sender, app_data, user_data):
         self.__log("__callback_select_file", sender, app_data, user_data)
-        self.__dataset = Saves.DataSet(app_data["file_path_name"])
+        self.__dataset = ML.DataSet(app_data["file_path_name"])
         dpg.set_value(Settings.TAG_SELECTED_FILENAME, self.__dataset.name())
         self.__log_base("__callback_select_file", str(self.__dataset))
 
@@ -162,12 +168,12 @@ class UI:
         self.__viewport_label = label_prime_window
         self.__viewport_height = height
         self.__viewport_width = width
-        self.__rf = Saves.MLModel(Settings.RF)
-        self.__svm = Saves.MLModel(Settings.SVM)
-        self.__knn = Saves.MLModel(Settings.KNN)
-        self.__gbm = Saves.MLModel(Settings.GBM)
-        self.__stacking = Saves.MLModel(Settings.STACKING)
-        self.__dataset = Saves.DataSet()
+        self.__rf = ML.MLModel(Settings.RF)
+        self.__svm = ML.MLModel(Settings.SVM)
+        self.__knn = ML.MLModel(Settings.KNN)
+        self.__gbm = ML.MLModel(Settings.GBM)
+        self.__stacking = ML.MLModel(Settings.STACKING)
+        self.__dataset = ML.DataSet()
         self.__current_method = self.__rf
         self.__counter = 1
         dpg.create_context()

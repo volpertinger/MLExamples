@@ -10,6 +10,8 @@ import pickle
 import Settings
 
 
+# TODO: обучение ансамблем
+
 class DataSet:
     def __init__(self, path: str = ""):
         self.__path = path
@@ -34,7 +36,9 @@ class MLModel:
         self.__is_learned = False
         self.__save_file_path = None
         self.__train_df = None
+        self.__test_df = None
         self.__label = label
+        self.__model = None
         self.__data_set = DataSet()
 
     @staticmethod
@@ -70,6 +74,7 @@ class MLModel:
             model.fit(train_data, train_result)
             self.__save_model(model)
 
+        self.__model = model
         acc_log = round(model.score(train_data, train_result) * 100, 2)
         self.__log("__teach", f"acc_log = {acc_log}")
         return acc_log
@@ -96,20 +101,29 @@ class MLModel:
     def __get_train_path(self):
         return self.__data_set.path() + "\\" + Settings.DATASET_TRAIN
 
+    def __get_test_path(self):
+        return self.__data_set.path() + "\\" + Settings.DATASET_TRAIN
+
     def __get_save_path(self, method):
         return self.__data_set.path() + "\\" + method + "_" + Settings.DATASET_SAVE
+
+    def __normalize_df(self, dataframe):
+        for column in dataframe:
+            if is_numeric_dtype(dataframe[column]):
+                continue
+            self.__log("__normalize_df", f"converting column {column} to numeric data type")
+            dataframe[column] = LabelEncoder().fit_transform(dataframe[column])
+        dataframe = dataframe.dropna()
+        return dataframe
 
     def __before_teach_processing(self, dataset: DataSet):
         self.__data_set = dataset
         self.__train_df = pd.read_csv(self.__get_train_path())
+        self.__test_df = pd.read_csv(self.__get_test_path())
 
-        for column in self.__train_df.columns:
-            if is_numeric_dtype(self.__train_df[column]):
-                continue
-            print(f"converting column {column} to numeric data type")
-            self.__train_df[column] = LabelEncoder().fit_transform(self.__train_df[column])
+        self.__train_df = self.__normalize_df(self.__train_df)
+        self.__normalize_df(self.__test_df)
 
-        self.__train_df = self.__train_df.dropna()
         return
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -144,5 +158,6 @@ class MLModel:
     def label(self):
         return self.__label
 
-    def test(self, test_value):
-        return self.__label + test_value
+    def test(self, test_index):
+        pred = self.__model.predict(self.__train_df)
+        return pred
