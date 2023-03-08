@@ -1,7 +1,8 @@
+import ML
+
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
 import Settings as Settings
-import ML as ML
 
 
 def init_demo():
@@ -98,8 +99,10 @@ class UI:
         self.__current_method = self.__get_save_by_label(label)
         if self.__current_method.is_learned():
             dpg.set_value(Settings.TAG_LEARN_RESULT, Settings.ALREADY_LEARNED)
+            self.__enable_test_block()
         else:
             dpg.set_value(Settings.TAG_LEARN_RESULT, Settings.NOT_LEARNED)
+            self.__disable_test_block()
 
     def __change_test_status(self, label):
         self.__current_method = self.__get_save_by_label(label)
@@ -114,20 +117,26 @@ class UI:
         self.__knn.set_dataset(self.__dataset)
         self.__gbm.set_dataset(self.__dataset)
         self.__stacking.set_dataset(self.__dataset)
-        pass
+        self.__change_learn_status(self.__current_method.label())
 
     @staticmethod
-    def __enable_ml():
-        dpg.enable_item(Settings.TAG_LEARN_BUTTON)
-        dpg.enable_item(Settings.TAG_TEST_BUTTON)
-        dpg.enable_item(Settings.TAG_INPUT_TEST_VALUE)
-
-    @staticmethod
-    def __disable_ml():
-        dpg.disable_item(Settings.TAG_LEARN_BUTTON)
+    def __disable_test_block():
         dpg.disable_item(Settings.TAG_TEST_BUTTON)
         dpg.disable_item(Settings.TAG_INPUT_TEST_VALUE)
         dpg.set_value(Settings.TAG_INPUT_TEST_VALUE, "")
+
+    @staticmethod
+    def __enable_test_block():
+        dpg.enable_item(Settings.TAG_TEST_BUTTON)
+        dpg.enable_item(Settings.TAG_INPUT_TEST_VALUE)
+
+    def __enable_ml(self):
+        dpg.enable_item(Settings.TAG_LEARN_BUTTON)
+        self.__enable_test_block()
+
+    def __disable_ml(self):
+        dpg.disable_item(Settings.TAG_LEARN_BUTTON)
+        self.__disable_test_block()
 
     @staticmethod
     def __disable_load():
@@ -169,15 +178,16 @@ class UI:
         self.__log("__callback_select_file", sender, app_data, user_data)
         self.__dataset = ML.DataSet(app_data["file_path_name"])
         self.__dataset_change_processing()
-        self.__callback_change_learn_status(sender, app_data, user_data)
         self.__enable_ml()
+        self.__callback_change_learn_status(sender, app_data, user_data)
         dpg.set_value(Settings.TAG_SELECTED_FILENAME, self.__dataset.name())
         self.__log_base("__callback_select_file", str(self.__dataset))
 
     def __callback_clear(self, sender, app_data, user_data):
         self.__log("__callback_clear", sender, app_data, user_data)
         self.__clear_test_result()
-        self.__dataset = None
+        self.__dataset = ML.DataSet()
+        self.__dataset_change_processing()
         self.__disable_ml()
         dpg.set_value(Settings.TAG_SELECTED_FILENAME, "")
 
