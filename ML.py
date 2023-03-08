@@ -37,6 +37,9 @@ class MLModel:
         self.__save_file_path = None
         self.__train_df = None
         self.__test_df = None
+        self.__predict = None
+        self.__test_data = None
+        self.__test_result = None
         self.__label = label
         self.__model = None
         self.__data_set = DataSet()
@@ -45,10 +48,11 @@ class MLModel:
     def __log(prefix, data):
         print(f"[{prefix}]: {data}")
 
-    def __get_train_data(self):
-        train_data = self.__train_df.drop(Settings.DATASET_RESULT_COLUMN, axis=1)
-        train_result = self.__train_df[Settings.DATASET_RESULT_COLUMN]
-        return train_data, train_result
+    @staticmethod
+    def __get_separated_data(data):
+        main_data = data.drop(Settings.DATASET_RESULT_COLUMN, axis=1)
+        result_data = data[Settings.DATASET_RESULT_COLUMN]
+        return main_data, result_data
 
     def __is_save_exists(self):
         save_path = self.__get_save_path(self.__label)
@@ -65,7 +69,10 @@ class MLModel:
         pickle.dump(model, open(save_path, "wb"))
 
     def __teach(self, method):
-        train_data, train_result = self.__get_train_data()
+        train_data, train_result = self.__get_separated_data(self.__train_df)
+        test_data, test_result = self.__get_separated_data(self.__test_df)
+        self.__test_data = test_data
+        self.__test_result = test_result
 
         if self.__is_save_exists():
             model = self.__load_model()
@@ -77,6 +84,7 @@ class MLModel:
         self.__model = model
         acc_log = round(model.score(train_data, train_result) * 100, 2)
         self.__log("__teach", f"acc_log = {acc_log}")
+        self.__predict = self.__model.predict(self.__test_data)
         return acc_log
 
     def __rf_learn(self):
@@ -122,8 +130,7 @@ class MLModel:
         self.__test_df = pd.read_csv(self.__get_test_path())
 
         self.__train_df = self.__normalize_df(self.__train_df)
-        self.__normalize_df(self.__test_df)
-
+        self.__test_df = self.__normalize_df(self.__test_df)
         return
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -159,5 +166,4 @@ class MLModel:
         return self.__label
 
     def test(self, test_index):
-        pred = self.__model.predict(self.__train_df)
-        return pred
+        return self.__predict[int(test_index)]
