@@ -64,7 +64,6 @@ DATASET_EXT = ".csv"
 DATASET_TRAIN = "train" + DATASET_EXT
 DATASET_TEST = "test" + DATASET_EXT
 DATASET_SAVE = "save"
-# TODO: убрать хардкод колонки
 DATASET_RESULT_COLUMN = "result"
 
 # ----------------------------------------------------------------------------------------------------------------------
